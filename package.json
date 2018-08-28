@@ -1,0 +1,24 @@
+{
+  "name": "spld-lambda",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "zip -r ../SPLD-Lambda.zip *   "
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CelesteComet/SPLD-Alexa-Lambda.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/CelesteComet/SPLD-Alexa-Lambda/issues"
+  },
+  "homepage": "https://github.com/CelesteComet/SPLD-Alexa-Lambda#readme",
+  "dependencies": {
+    "ask-sdk-core": "^2.0.7",
+    "ask-sdk-model": "^1.5.0"
+  }
+}
