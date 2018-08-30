@@ -23,6 +23,10 @@
 /* eslint-disable  no-console */
 
 const Alexa = require('ask-sdk-core');
+const { getAllSlotNames, getSlotValues } = require('./utils/alexaUtils');
+const msg = require('./localization/en.json'); //with path
+
+const JokeIntent = require('./IntentHandlers/jokeIntentHandler');
 
 /* INTENT HANDLERS */
 
@@ -32,8 +36,8 @@ const LaunchRequestHandler = {
   },
   handle(handlerInput) {
     return handlerInput.responseBuilder
-      .speak('Welcome to Decision Tree. I will recommend the best job for you. Do you want to start your career or be a couch potato?')
-      .reprompt('Do you want a career or to be a couch potato?')
+      .speak(msg.WelcomeSpeech)
+      .reprompt(msg.WelcomePrompt)
       .getResponse();
   },
 };
@@ -64,11 +68,16 @@ const InProgressRecommendationIntent = {
     const currentIntent = handlerInput.requestEnvelope.request.intent;
     let prompt = '';
 
-    for (const slotName of Object.keys(handlerInput.requestEnvelope.request.intent.slots)) {
+    const allSlotNames = getAllSlotNames(handlerInput);
+
+    for (const slotName of allSlotNames) {
+
       const currentSlot = currentIntent.slots[slotName];
+
       if (currentSlot.confirmationStatus !== 'CONFIRMED'
                 && currentSlot.resolutions
                 && currentSlot.resolutions.resolutionsPerAuthority[0]) {
+
         if (currentSlot.resolutions.resolutionsPerAuthority[0].status.code === 'ER_SUCCESS_MATCH') {
           if (currentSlot.resolutions.resolutionsPerAuthority[0].values.length > 1) {
             prompt = 'Which would you like';
@@ -101,6 +110,7 @@ const InProgressRecommendationIntent = {
       }
     }
 
+    // Initial Prompt
     return handlerInput.responseBuilder
       .addDelegateDirective(currentIntent)
       .getResponse();
@@ -145,8 +155,8 @@ const HelpHandler = {
   },
   handle(handlerInput) {
     return handlerInput.responseBuilder
-      .speak('This is Decision Tree. I can help you find the perfect job. You can say, recommend a job.')
-      .reprompt('Would you like a career or do you want to be a couch potato?')
+      .speak(msg.HelpSpeech)
+      .reprompt(msg.HelpReprompt)
       .getResponse();
   },
 };
@@ -254,54 +264,11 @@ const options = [
   { name: 'Zoologist', description: '' },
 ];
 
-/* HELPER FUNCTIONS */
-
-function getSlotValues(filledSlots) {
-  const slotValues = {};
-
-  console.log(`The filled slots: ${JSON.stringify(filledSlots)}`);
-  Object.keys(filledSlots).forEach((item) => {
-    const name = filledSlots[item].name;
-
-    if (filledSlots[item] &&
-      filledSlots[item].resolutions &&
-      filledSlots[item].resolutions.resolutionsPerAuthority[0] &&
-      filledSlots[item].resolutions.resolutionsPerAuthority[0].status &&
-      filledSlots[item].resolutions.resolutionsPerAuthority[0].status.code) {
-      switch (filledSlots[item].resolutions.resolutionsPerAuthority[0].status.code) {
-        case 'ER_SUCCESS_MATCH':
-          slotValues[name] = {
-            synonym: filledSlots[item].value,
-            resolved: filledSlots[item].resolutions.resolutionsPerAuthority[0].values[0].value.name,
-            isValidated: true,
-          };
-          break;
-        case 'ER_SUCCESS_NO_MATCH':
-          slotValues[name] = {
-            synonym: filledSlots[item].value,
-            resolved: filledSlots[item].value,
-            isValidated: false,
-          };
-          break;
-        default:
-          break;
-      }
-    } else {
-      slotValues[name] = {
-        synonym: filledSlots[item].value,
-        resolved: filledSlots[item].value,
-        isValidated: false,
-      };
-    }
-  }, this);
-
-  return slotValues;
-}
-
 exports.handler = skillBuilder
   .addRequestHandlers(
     LaunchRequestHandler,
     CouchPotatoIntent,
+    JokeIntent,
     InProgressRecommendationIntent,
     CompletedRecommendationIntent,
     HelpHandler,
