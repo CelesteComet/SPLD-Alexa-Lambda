@@ -9,7 +9,7 @@ const ErrorHandler = {
     console.log(`Error handled: ${error}`);
 
     return handlerInput.responseBuilder
-      .speak('Sorry, I can not understand the command.  Please say again.')
+      .speak(`Sorry, I can not understand the command.  Please say again.${error}`)
       .reprompt('Sorry, I can not understand the command.  Please say again.')
       .getResponse();
   },

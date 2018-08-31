@@ -30,6 +30,33 @@ const JokeIntent = require('./IntentHandlers/jokeIntentHandler');
 
 /* INTENT HANDLERS */
 
+const slotsToOptionsMap = {
+  'strong-road-rich-climbing': 'S-Works Tarmac',
+  'strong-road-rich-aero': 'S-Works Venge',
+  'strong-road-rich-both': 'S-Works Crux',
+  'strong-road-poor-climbing': 'Allez',
+  'strong-road-poor-aero': 'Shiv',
+  'strong-road-poor-both': 'Allez',
+  'strong-mountain-rich-climbing': 'S-Works Stumpjumper',
+  'strong-mountain-rich-aero': 'S-Works Stumpjumper',
+  'strong-mountain-rich-both': 'S-Works Stumpjumper',
+  'strong-mountain-poor-climbing': 'Stumpjumper',
+  'strong-mountain-poor-aero': 'Stumpjumper',
+  'strong-mountain-poor-both': 'Stumpjumper',
+  'weak-road-rich-climbing': 'Turbo Vado 6.0',
+  'weak-road-rich-aero': 'Turbo Vado 6.0',
+  'weak-road-rich-both': 'Turbo Vado 6.0',
+  'weak-road-poor-climbing': 'Turbo Vado 2.0',
+  'weak-road-poor-aero': 'Turbo Vado 2.0',
+  'weak-road-poor-both': 'Turbo Vado 2.0',
+  'weak-mountain-rich-climbing': 'S-Works Turbo Levo',
+  'weak-mountain-rich-aero': 'S-Works Turbo Levo',
+  'weak-mountain-rich-both': 'S-Works Turbo Levo',
+  'weak-mountain-poor-climbing': 'Turbo Levo',
+  'weak-mountain-poor-aero': 'Turbo Levo',
+  'weak-mountain-poor-both': 'Turbo Levo'
+};
+
 const LaunchRequestHandler = {
   canHandle(handlerInput) {
     return handlerInput.requestEnvelope.request.type === 'LaunchRequest';
@@ -42,19 +69,7 @@ const LaunchRequestHandler = {
   },
 };
 
-const CouchPotatoIntent = {
-  canHandle(handlerInput) {
-    const request = handlerInput.requestEnvelope.request;
 
-    return request.type === 'IntentRequest' 
-      && request.intent.name === 'CouchPotatoIntent';
-  },
-  handle(handlerInput) {
-    return handlerInput.responseBuilder
-      .speak('You don\'t want to start your career? Have fun wasting away on the couch.')
-      .getResponse();
-  },
-};
 
 const InProgressRecommendationIntent = {
   canHandle(handlerInput) {
@@ -129,16 +144,36 @@ const CompletedRecommendationIntent = {
     const filledSlots = handlerInput.requestEnvelope.request.intent.slots;
 
     const slotValues = getSlotValues(filledSlots);
+    console.log("WORKS UP TO HERE");
+    let strength, terrain, wealth, ridingStyle;
+    strength = slotValues.riderStrength.resolved;
+    terrain = slotValues.preferredTerrain.resolved;
+    wealth = slotValues.wealth.resolved;
+    ridingStyle = slotValues.ridingStyle.resolved;
 
-    const key = `${slotValues.salaryImportance.resolved}-${slotValues.personality.resolved}-${slotValues.bloodTolerance.resolved}-${slotValues.preferredSpecies.resolved}`;
-    const occupation = options[slotsToOptionsMap[key]];
 
-    const speechOutput = `So you want to be ${slotValues.salaryImportance.resolved
-    }. You are an ${slotValues.personality.resolved
-    }, you like ${slotValues.preferredSpecies.resolved
-    }  and you ${slotValues.bloodTolerance.resolved === 'high' ? 'can' : "can't"
-    } tolerate blood ` +
-            `. You should consider being a ${occupation.name}`;
+    const key = `${strength}-${terrain}-${wealth}-${ridingStyle}`;
+
+    //const occupation = options[slotsToOptionsMap[key]];
+    const recommendedBike = slotsToOptionsMap[key];
+
+    const NLPMapping = {
+      strong: 'strong',
+      weak: 'weak',
+      rich: 'fancy pants aristocratic',
+      poor: 'poor pleabian',
+      aero: 'riding fast on flats and trying to race cars',
+      climbing: 'climbing up hills just to crash on the descent',
+      both: 'cycling for the sake of cycling',
+      road: 'car roads without bike lanes',
+      mountain: 'dirty dirt roads',
+      both: 'both skinny and fat tire bikes'
+    };
+
+    console.log("WERKS HERE");
+
+    let speechOutput = `So you're a ${NLPMapping[strength]} ${NLPMapping[wealth]} rider who enjoys ${NLPMapping[ridingStyle]} riding on ${NLPMapping[terrain]}.`
+    speechOutput += ` I would recommend you buy an ${slotsToOptionsMap[key]} at your nearest Specialized dealer.`;
 
     return handlerInput.responseBuilder
       .speak(speechOutput)
@@ -207,12 +242,25 @@ const ErrorHandler = {
 const skillBuilder = Alexa.SkillBuilders.custom();
 
 const requiredSlots = [
-  'preferredSpecies',
-  'bloodTolerance',
-  'personality',
-  'salaryImportance',
+  'preferredTerrainType',
+  'riderStrengthType',
+  'wealthType',
+  'ridingStyle'
 ];
 
+
+/*
+  if it includes weakling, remove everything but bikes with turbo
+  if it includes poor, 
+
+  
+  const bikes = 'Turbo Levo', 'Turbo Vado', 'Turbo Como', 
+  'Venge', 'Tarmac', 'Roubaix'
+  'S-Works Venge', 'S-Works Tarmac', 'Roubaix'
+*/
+
+
+/*
 const slotsToOptionsMap = {
   'unimportant-introvert-low-animals': 20,
   'unimportant-introvert-low-people': 8,
@@ -239,6 +287,7 @@ const slotsToOptionsMap = {
   'very-extrovert-high-animals': 1,
   'very-extrovert-high-people': 5,
 };
+*/
 
 const options = [
   { name: 'Actor', description: '' },
@@ -267,7 +316,6 @@ const options = [
 exports.handler = skillBuilder
   .addRequestHandlers(
     LaunchRequestHandler,
-    CouchPotatoIntent,
     JokeIntent,
     InProgressRecommendationIntent,
     CompletedRecommendationIntent,
