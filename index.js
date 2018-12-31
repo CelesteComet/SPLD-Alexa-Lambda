@@ -26,7 +26,12 @@ const Alexa = require('ask-sdk-core');
 const { getAllSlotNames, getSlotValues } = require('./utils/alexaUtils');
 const msg = require('./localization/en.json'); //with path
 
-const JokeIntent = require('./IntentHandlers/jokeIntentHandler');
+const JokeHandler               = require('./IntentHandlers/jokeIntentHandler');
+const LaunchHandler             = require('./IntentHandlers/launchRequestHandler');
+const HelpHandler               = require('./IntentHandlers/helpIntentHandler');
+const ExitHandler               = require('./IntentHandlers/cancelAndStopIntentHandler');
+const ErrorHandler              = require('./IntentHandlers/errorHandler');
+const MissionControlFAQHandler  = require('./IntentHandlers/missionControlFAQHandler');
 
 /* INTENT HANDLERS */
 
@@ -56,20 +61,6 @@ const slotsToOptionsMap = {
   'weak-mountain-poor-aero': 'Turbo Levo',
   'weak-mountain-poor-both': 'Turbo Levo'
 };
-
-const LaunchRequestHandler = {
-  canHandle(handlerInput) {
-    return handlerInput.requestEnvelope.request.type === 'LaunchRequest';
-  },
-  handle(handlerInput) {
-    return handlerInput.responseBuilder
-      .speak(msg.WelcomeSpeech)
-      .reprompt(msg.WelcomePrompt)
-      .getResponse();
-  },
-};
-
-
 
 const InProgressRecommendationIntent = {
   canHandle(handlerInput) {
@@ -170,43 +161,11 @@ const CompletedRecommendationIntent = {
       both: 'both skinny and fat tire bikes'
     };
 
-    console.log("WERKS HERE");
-
     let speechOutput = `So you're a ${NLPMapping[strength]} ${NLPMapping[wealth]} rider who enjoys ${NLPMapping[ridingStyle]} riding on ${NLPMapping[terrain]}.`
     speechOutput += ` I would recommend you buy an ${slotsToOptionsMap[key]} at your nearest Specialized dealer.`;
 
     return handlerInput.responseBuilder
       .speak(speechOutput)
-      .getResponse();
-  },
-};
-
-const HelpHandler = {
-  canHandle(handlerInput) {
-    const request = handlerInput.requestEnvelope.request;
-
-    return request.type === 'IntentRequest' 
-      && request.intent.name === 'AMAZON.HelpIntent';
-  },
-  handle(handlerInput) {
-    return handlerInput.responseBuilder
-      .speak(msg.HelpSpeech)
-      .reprompt(msg.HelpReprompt)
-      .getResponse();
-  },
-};
-
-const ExitHandler = {
-  canHandle(handlerInput) {
-    const request = handlerInput.requestEnvelope.request;
-
-    return request.type === 'IntentRequest'
-      && (request.intent.name === 'AMAZON.CancelIntent'
-        || request.intent.name === 'AMAZON.StopIntent');
-  },
-  handle(handlerInput) {
-    return handlerInput.responseBuilder
-      .speak('Bye')
       .getResponse();
   },
 };
@@ -219,21 +178,6 @@ const SessionEndedRequestHandler = {
     console.log(`Session ended with reason: ${handlerInput.requestEnvelope.request.reason}`);
 
     return handlerInput.responseBuilder.getResponse();
-  },
-};
-
-
-const ErrorHandler = {
-  canHandle() {
-    return true;
-  },
-  handle(handlerInput, error) {
-    console.log(`Error handled: ${error.message}`);
-
-    return handlerInput.responseBuilder
-      .speak('Sorry, I can\'t understand the command. Please say again.')
-      .reprompt('Sorry, I can\'t understand the command. Please say again.')
-      .getResponse();
   },
 };
 
@@ -313,15 +257,23 @@ const options = [
   { name: 'Zoologist', description: '' },
 ];
 
+/*
+const JokeHandler   = require('./IntentHandlers/jokeIntentHandler');
+const LaunchHandler = require('./IntentHandlers/launchIntentHandler');
+const HelpHandler   = require('./IntentHandlers/helpIntentHandler');
+const ExitHandler   = require('./IntentHandlers/cancelAndStopIntentHandler');
+const ErrorHandler  = require('./IntentHandlers/errorHandler');
+*/
+
 exports.handler = skillBuilder
   .addRequestHandlers(
-    LaunchRequestHandler,
-    JokeIntent,
-    InProgressRecommendationIntent,
-    CompletedRecommendationIntent,
+    LaunchHandler,
     HelpHandler,
     ExitHandler,
-    SessionEndedRequestHandler    
+    JokeHandler,
+    InProgressRecommendationIntent,
+    CompletedRecommendationIntent,
+    MissionControlFAQHandler
   )
   .addErrorHandlers(ErrorHandler)
   .lambda();
